@@ -1,7 +1,6 @@
 from fastapi import FastAPI, File, HTTPException, UploadFile
-
-from app.file_service import save_file
-
+from fastapi.responses import Response
+from app.file_service import save_file, read_file, list_files
 
 app = FastAPI(
     title="IO-Bound File API",
@@ -27,3 +26,20 @@ async def upload_file(file: UploadFile = File(...)):
             status_code=500,
             detail="Failed to save the uploaded file.",
         ) from exc
+
+@app.get("/files/{file_id}/content")
+async def get_file_content(file_id: str):
+    content = await read_file(file_id)
+    return Response(
+        content=content,
+        media_type="application/octet-stream",
+    )
+
+@app.get("/files")
+async def get_files():
+    files = await list_files()
+
+    return {
+        "total": len(files),
+        "files": files,
+    }
