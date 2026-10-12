@@ -4,7 +4,7 @@ Aplicação backend desenvolvida em **Python** com **FastAPI**, projetada especi
 
 ---
 
-## 📌 1. Características do Perfil CPU-Bound
+## 1. Características do Perfil CPU-Bound
 
 A aplicação executa o algoritmo de **fatoração de inteiros por divisão sucessiva (trial division)**:
 - **Computação pura:** Executa repetidos testes de divisibilidade e divisões inteiras em loop até a raiz quadrada do número.
@@ -14,7 +14,7 @@ A aplicação executa o algoritmo de **fatoração de inteiros por divisão suce
 
 ---
 
-## 🐳 2. Como Subir a Aplicação com Docker
+## 2. Como Subir a Aplicação com Docker
 
 ### 2.1 Construir a imagem Docker
 A partir do diretório raiz do projeto ou dentro de `cpu-bound/`:
@@ -34,7 +34,7 @@ docker run -d --name cpu-bound-container -p 8000:8000 cpu-bound-app
 
 ---
 
-## 💻 3. Como Executar Localmente (sem Docker)
+## 3. Como Executar Localmente (sem Docker)
 
 1. Certifique-se de ter o Python 3.11+ instalado.
 2. Instale o pacote e suas dependências a partir do `pyproject.toml`:
@@ -48,7 +48,7 @@ docker run -d --name cpu-bound-container -p 8000:8000 cpu-bound-app
 
 ---
 
-## 🚀 4. Como Usar a Aplicação (Sem Front-end)
+## 4. Como Usar a Aplicação
 
 Como a aplicação é estritamente **backend**, você pode interagir com ela de três formas:
 
@@ -141,7 +141,7 @@ Você pode simplesmente colar a URL na barra de endereços do seu navegador:
 
 ---
 
-## ⚙️ 5. Parâmetros da Rota CPU-Bound (`/api/factor`)
+## 5. Parâmetros da Rota CPU-Bound (`/api/factor`)
 
 | Parâmetro | Tipo | Padrão | Descrição |
 |-----------|------|--------|-----------|
@@ -150,7 +150,7 @@ Você pode simplesmente colar a URL na barra de endereços do seu navegador:
 
 ---
 
-## 📊 6. Monitoramento nos Experimentos
+## 6. Monitoramento nos Experimentos
 
 Durante os testes de stress (gerados a partir do host externo):
 1. **Métricas da Aplicação:** A rota `/metrics` expõe `process_cpu_percent` e memória RSS.
