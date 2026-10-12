@@ -13,11 +13,11 @@ sar -n DEV "$INTERVAL" "$SAMPLES" -o network.bin >/dev/null 2>&1 &
 wait
 
 # Export data to CSV
-sadf -d -O separator=, cpu.bin -- -u > cpu.csv
-sadf -d -O separator=, memory.bin -- -r > memory.csv
+sadf -d cpu.bin -- -u > cpu.csv
+sadf -d memory.bin -- -r > memory.csv
 
-sadf -d -O separator=, disk.bin -- -d -p |
+sadf -d disk.bin -- -d -p |
 awk -F',' -v disk="$DISK" 'NR == 1 || index($0, disk) > 0' > disk.csv
 
-sadf -d -O separator=, network.bin -- -n DEV |
+sadf -d network.bin -- -n DEV |
 awk -F',' -v iface="$INTERFACE" 'NR == 1 || index($0, iface) > 0' > network.csv
