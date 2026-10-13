@@ -6,8 +6,8 @@ set -euo pipefail
 BASE_URL="http://localhost:8080"
 DURATION="60s"
 
-CSV_FILE="dados1_1MB.csv"
-VUS=3
+CSV_FILE="dados2_10MB.csv"
+VUS=10
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
