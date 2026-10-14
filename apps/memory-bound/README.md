@@ -122,8 +122,7 @@ convention: an nginx site, a systemd unit, and two start scripts.
 
    ```bash
    cd Infrastructure-provisioning-and-operation-Resources-bound
-   sudo cp services/memory-bound/memory-bound /etc/nginx/sites-available/
-   sudo bash services/memory-bound/start-nginx.sh
+   sudo bash services/memory-bound/start-nginx.sh   # copies the nginx site, enables it, reloads
    sudo cp services/memory-bound/memory-bound.service /etc/systemd/system/
    sudo bash services/memory-bound/start-service.sh
    ```
