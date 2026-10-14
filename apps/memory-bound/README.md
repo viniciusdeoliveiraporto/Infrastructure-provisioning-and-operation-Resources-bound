@@ -98,6 +98,64 @@ VPC peering, or `localhost` with an SSH tunnel). With `-admin` off you can still
 prepopulate at startup via `-populate-entries`, but the load generator cannot
 trigger population or fetch server-side metrics.
 
+## Deploy on a VM (nginx + systemd)
+
+Run the server behind nginx on a Linux VM (Debian/Ubuntu, `apt`) so it is
+reachable from your PC. Deployment files mirror the `services/io-bound/`
+convention: an nginx site, a systemd unit, and two start scripts.
+
+1. Prepare the VM (installs nginx and sysstat):
+
+   ```bash
+   sudo bash scripts/setup-vm.sh
+   ```
+
+2. Put the repository on the VM at the path the unit expects (skip if it is
+   already there), e.g. from the project root on your PC:
+
+   ```bash
+   ssh <user>@<vm> mkdir -p ~/Infrastructure-provisioning-and-operation-Resources-bound
+   scp -r apps services <user>@<vm>:~/Infrastructure-provisioning-and-operation-Resources-bound/
+   ```
+
+3. Install and start nginx + the server service:
+
+   ```bash
+   cd Infrastructure-provisioning-and-operation-Resources-bound
+   sudo cp services/memory-bound/memory-bound /etc/nginx/sites-available/
+   sudo bash services/memory-bound/start-nginx.sh
+   sudo cp services/memory-bound/memory-bound.service /etc/systemd/system/
+   sudo bash services/memory-bound/start-service.sh
+   ```
+
+   The unit runs `./server -addr 127.0.0.1:8080 -admin`, so the Go server is
+   reachable only through nginx (port 80 in the guest). Adjust `User=` and the
+   paths in the unit if your VM's user/home differ.
+
+4. From your PC, forward a host port to the guest with VirtualBox NAT
+   (GUI: Settings → Network → Advanced → Port Forwarding), or:
+
+   ```bash
+   VBoxManage modifyvm "<vm-name>" --natpf1 "memory-bound,tcp,127.0.0.1,8080,,80"
+   ```
+
+5. Verify and use it:
+
+   ```bash
+   curl http://127.0.0.1:8080/health
+   curl -X POST http://127.0.0.1:8080/admin/populate -d '{"entries":10000,"value_size":1024}'
+   curl http://127.0.0.1:8080/kv/key-000000042
+   ```
+
+   Or open the manual demo page (store/retrieve a key from the browser):
+   **http://127.0.0.1:8080/demo/** — served by nginx from
+   `apps/memory-bound/demo/index.html`.
+
+Caveats: the demo/admin path adds nginx + NAT overhead, so run the real
+benchmarks inside the VM with loadgen pointed at `127.0.0.1:8080` directly
+(bypassing nginx). The admin endpoints are unauthenticated — keep the VM on a
+private/NAT-only network.
+
 ## HTTP API
 
 | Endpoint | Description |
