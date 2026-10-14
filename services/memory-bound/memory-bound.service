@@ -1,0 +1,12 @@
+[Unit]
+Description=Memory-Bound KV Server (Go)
+After=network.target
+
+[Service]
+User=usuario
+WorkingDirectory=/home/osboxes/Infrastructure-provisioning-and-operation-Resources-bound/apps/memory-bound
+ExecStart=/home/osboxes/Infrastructure-provisioning-and-operation-Resources-bound/apps/memory-bound/server -addr 127.0.0.1:8080 -admin
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
