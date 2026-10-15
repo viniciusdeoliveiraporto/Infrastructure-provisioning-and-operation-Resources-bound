@@ -192,6 +192,8 @@ func Execute(ctx context.Context, cfg Config) (*Run, error) {
 	serverSamples, err := FetchServerSamples(ctx, client, cfg.URL, measureStart, measureEnd)
 	if err != nil {
 		log.Printf("warning: server metrics unavailable (admin disabled?): %v", err)
+	} else if len(serverSamples) == 0 {
+		log.Printf("warning: server metrics empty — check clock sync between client and server (enable NTP, e.g. `sudo timedatectl set-ntp true` on the server)")
 	}
 	run.Server = serverSamples
 	run.Observations = Observe(run)

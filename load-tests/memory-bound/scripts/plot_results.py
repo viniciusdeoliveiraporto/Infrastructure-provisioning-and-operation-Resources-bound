@@ -177,10 +177,6 @@ def plot_resources(run_dir, cols):
         xs, ys = series(cols, "server_system_cpu_pct")
         ax1.plot(xs, ys, label="system CPU (%)", color="tab:purple", linewidth=1.0)
         plotted = True
-    if has_data(cols, "client_cpu_pct"):
-        xs, ys = series(cols, "client_cpu_pct")
-        ax1.plot(xs, ys, label="client process CPU (%)", color="tab:gray", linewidth=1.0)
-        plotted = True
     ax1.set_ylabel("CPU utilization (%)")
     ax1.set_title("CPU utilization over time")
     ax1.legend()
@@ -195,10 +191,6 @@ def plot_resources(run_dir, cols):
         xs, ys = series(cols, "server_heap_mib")
         ax2.plot(xs, ys, label="server Go heap (MiB)", color="tab:olive", linewidth=1.0)
         mem = True
-    if has_data(cols, "client_rss_mib"):
-        xs, ys = series(cols, "client_rss_mib")
-        ax2.plot(xs, ys, label="client RSS (MiB)", color="tab:gray", linewidth=1.0)
-        mem = True
     ax2.set_xlabel("Elapsed time (s)")
     ax2.set_ylabel("Memory (MiB)")
     ax2.set_title("Process memory over time")
@@ -208,7 +200,7 @@ def plot_resources(run_dir, cols):
         plt.close(fig)
         print("skipped resources.png: no CPU/RSS columns present")
         return
-    finish(fig, os.path.join(run_dir, "resources.png"), "Server and client resources")
+    finish(fig, os.path.join(run_dir, "resources.png"), "Server resources")
 
 
 def scatter_vs(run_dir, cols, resource_col, resource_name, out_name, title):
