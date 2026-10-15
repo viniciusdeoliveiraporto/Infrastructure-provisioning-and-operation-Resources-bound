@@ -38,3 +38,7 @@ monitoring and Matplotlib plots after every run:
 - Load generator + plotting (Go + Python): [`load-tests/memory-bound/`](load-tests/memory-bound/) —
   workload flags, outputs, and comparison mode in its
   [README](load-tests/memory-bound/README.md).
+
+## Documentation
+
+- [Relatório de infraestrutura e experimentos (Google Docs)](https://docs.google.com/document/d/1IE4x5i314BrOXRzOMBGNLph9f00jGkIg_GoFSW3fs2U/edit?tab=t.hnscrko26v9h)
