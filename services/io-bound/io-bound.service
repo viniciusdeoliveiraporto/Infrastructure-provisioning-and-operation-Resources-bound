@@ -1,0 +1,12 @@
+[Unit]
+Description=IO-Bound FastAPI Application
+After=network.target
+
+[Service]
+User=osboxes
+WorkingDirectory=/home/osboxes/Infrastructure-provisioning-and-operation-Resources-bound/apps/io-bound
+ExecStart=/home/osboxes/Infrastructure-provisioning-and-operation-Resources-bound/apps/io-bound/.venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8003
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

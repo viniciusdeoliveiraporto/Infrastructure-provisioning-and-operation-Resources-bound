@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Memory-Bound KV Demo</title>
+<style>
+  :root {
+    --bg: #f5f6f8;
+    --card: #ffffff;
+    --border: #d9dce1;
+    --text: #1f2933;
+    --muted: #6b7280;
+    --accent: #2563eb;
+    --ok: #16a34a;
+    --err: #dc2626;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    padding: 2rem 1rem;
+  }
+  main { max-width: 640px; margin: 0 auto; }
+  h1 { font-size: 1.3rem; margin: 0 0 .25rem; }
+  .sub { color: var(--muted); font-size: .85rem; margin-bottom: 1.5rem; }
+  .badge {
+    display: inline-block;
+    font-size: .75rem;
+    font-weight: 600;
+    padding: .15rem .5rem;
+    border-radius: 999px;
+    background: #e5e7eb;
+    color: var(--muted);
+  }
+  .badge.up { background: #dcfce7; color: var(--ok); }
+  .badge.down { background: #fee2e2; color: var(--err); }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+  }
+  label { display: block; font-size: .8rem; font-weight: 600; margin-bottom: .25rem; }
+  input[type=text], textarea {
+    width: 100%;
+    padding: .5rem .6rem;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font: inherit;
+    margin-bottom: .75rem;
+  }
+  textarea { resize: vertical; min-height: 4.5rem; }
+  button {
+    font: inherit;
+    font-weight: 600;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: .5rem 1rem;
+    background: var(--card);
+    cursor: pointer;
+  }
+  button:hover { background: #f3f4f6; }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  button.primary:hover { background: #1d4ed8; }
+  .row { display: flex; gap: .5rem; flex-wrap: wrap; }
+  .result { font-size: .85rem; }
+  .result .meta { color: var(--muted); margin-bottom: .5rem; }
+  .result .meta b.ok { color: var(--ok); }
+  .result .meta b.err { color: var(--err); }
+  pre {
+    background: #0f172a;
+    color: #e2e8f0;
+    padding: .75rem;
+    border-radius: 6px;
+    overflow-x: auto;
+    margin: 0;
+    font-size: .8rem;
+    white-space: pre-wrap;
+    word-break: break-all;
+  }
+  #log { font-size: .75rem; color: var(--muted); list-style: none; padding: 0; margin: 0; }
+  #log li { padding: .2rem 0; border-bottom: 1px solid var(--border); }
+  #log li:last-child { border-bottom: none; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Memory-Bound KV Demo <span id="health" class="badge">checking…</span></h1>
+  <p class="sub">In-memory key-value server behind nginx. Store a key, retrieve it.</p>
+
+  <div class="card">
+    <label for="key">Key</label>
+    <input type="text" id="key" value="key-000000000" autocomplete="off">
+    <label for="value">Value</label>
+    <textarea id="value">hello from the demo</textarea>
+    <div class="row">
+      <button class="primary" id="putBtn">Store (PUT /kv)</button>
+      <button id="getBtn">Load (GET /kv)</button>
+    </div>
+  </div>
+
+  <div class="card result">
+    <div class="meta" id="resultMeta">No request yet.</div>
+    <pre id="resultBody" hidden></pre>
+  </div>
+
+  <div class="card">
+    <label>Request log</label>
+    <ul id="log"></ul>
+  </div>
+</main>
+<script>
+(function () {
+  var keyInput = document.getElementById("key");
+  var valueInput = document.getElementById("value");
+  var resultMeta = document.getElementById("resultMeta");
+  var resultBody = document.getElementById("resultBody");
+  var logEl = document.getElementById("log");
+  var healthEl = document.getElementById("health");
+
+  function log(method, path, status, ms) {
+    var li = document.createElement("li");
+    li.textContent = new Date().toLocaleTimeString() + "  " +
+      method + " " + path + " → " + status + " (" + ms.toFixed(1) + " ms)";
+    logEl.prepend(li);
+    while (logEl.children.length > 8) logEl.removeChild(logEl.lastChild);
+  }
+
+  function showResult(ok, meta, bodyText) {
+    resultMeta.innerHTML = '<b class="' + (ok ? "ok" : "err") + '">' +
+      (ok ? "OK" : "FAILED") + "</b> " + meta;
+    if (bodyText !== null) {
+      resultBody.textContent = bodyText;
+      resultBody.hidden = false;
+    } else {
+      resultBody.hidden = true;
+    }
+  }
+
+  // Populate-created values start with a big-endian entry index.
+  function entryIndex(bytes) {
+    if (bytes.length < 4) return null;
+    return ((bytes[0] << 24) >>> 0) + (bytes[1] << 16) + (bytes[2] << 8) + bytes[3];
+  }
+
+  function decodeValue(bytes) {
+    var parts = ["bytes: " + bytes.length];
+    var idx = entryIndex(bytes);
+    if (idx !== null && idx < 1000000000) parts.push("entry index: " + idx);
+    var text = new TextDecoder("utf-8", { fatal: false }).decode(bytes);
+    var printable = /^[\x20-\x7e\n\r\t]*$/.test(text);
+    parts.push(printable ? "value: " + text : "value (hex preview): " +
+      Array.from(bytes.slice(0, 32)).map(function (b) {
+        return b.toString(16).padStart(2, "0");
+      }).join(" ") + (bytes.length > 32 ? " …" : ""));
+    return parts.join("\n");
+  }
+
+  async function putKey() {
+    var key = keyInput.value.trim();
+    if (!key) { showResult(false, "key is empty", null); return; }
+    var path = "/kv/" + encodeURIComponent(key);
+    var t0 = performance.now();
+    try {
+      var res = await fetch(path, { method: "PUT", body: valueInput.value });
+      var ms = performance.now() - t0;
+      log("PUT", path, res.status, ms);
+      if (res.ok) {
+        showResult(true, path + " → " + res.status + " " + res.statusText +
+          " in " + ms.toFixed(1) + " ms", null);
+      } else {
+        showResult(false, path + " → " + res.status + " " + res.statusText, await res.text());
+      }
+    } catch (e) {
+      showResult(false, "request failed: " + e, null);
+    }
+  }
+
+  async function getKey() {
+    var key = keyInput.value.trim();
+    if (!key) { showResult(false, "key is empty", null); return; }
+    var path = "/kv/" + encodeURIComponent(key);
+    var t0 = performance.now();
+    try {
+      var res = await fetch(path);
+      var ms = performance.now() - t0;
+      log("GET", path, res.status, ms);
+      if (res.ok) {
+        var buf = new Uint8Array(await res.arrayBuffer());
+        showResult(true, path + " → " + res.status + " in " + ms.toFixed(1) + " ms",
+          decodeValue(buf));
+      } else {
+        showResult(false, path + " → " + res.status + " " + res.statusText +
+          (res.status === 404 ? " (key not found)" : ""), null);
+      }
+    } catch (e) {
+      showResult(false, "request failed: " + e, null);
+    }
+  }
+
+  async function ping() {
+    try {
+      var res = await fetch("/health");
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      var body = await res.json();
+      healthEl.textContent = "server up · " + Math.round(body.uptime_seconds) + "s uptime";
+      healthEl.className = "badge up";
+    } catch (e) {
+      healthEl.textContent = "server unreachable";
+      healthEl.className = "badge down";
+    }
+  }
+
+  document.getElementById("putBtn").addEventListener("click", putKey);
+  document.getElementById("getBtn").addEventListener("click", getKey);
+  ping();
+  setInterval(ping, 5000);
+})();
+</script>
+</body>
+</html>
