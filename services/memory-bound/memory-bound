@@ -4,11 +4,6 @@ server {
 
     client_max_body_size 10m;
 
-    location /demo/ {
-        alias /home/osboxes/Infrastructure-provisioning-and-operation-Resources-bound/apps/memory-bound/demo/;
-        index index.html;
-    }
-
     location / {
         proxy_pass http://127.0.0.1:8080;
         proxy_http_version 1.1;
