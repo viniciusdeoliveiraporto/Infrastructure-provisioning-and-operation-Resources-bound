@@ -1,0 +1,38 @@
+services:
+  cpu-bound:
+    build:
+      context: .
+      dockerfile: apps/cpu-bound/Dockerfile
+    image: matheusgaldinoo/cpu-bound:1.0
+    container_name: app-cpu-bound
+    restart: unless-stopped
+    ports:
+      - "8001:8001"
+    volumes:
+      - /data/cpu-bound/logs:/app/logs
+    environment:
+      - PYTHONUNBUFFERED=1
+
+  io-bound:
+    build:
+      context: .
+      dockerfile: apps/io-bound/Dockerfile
+    image: viniciusportoccc/io-bound:1.0
+    container_name: app-io-bound
+    restart: unless-stopped
+    ports:
+      - "8003:8003"
+    volumes:
+      - /data/io-bound/storage:/data/io-bound/storage
+    environment:
+      - PYTHONUNBUFFERED=1
+
+  memory-bound:
+    build:
+      context: .
+      dockerfile: apps/memory-bound/Dockerfile
+    image: lazaroqueiroz/memory-bound:1.0
+    container_name: app-memory-bound
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
