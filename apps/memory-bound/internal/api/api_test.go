@@ -56,31 +56,6 @@ func TestHealth(t *testing.T) {
 	}
 }
 
-func TestDemo(t *testing.T) {
-	srv, _, _ := newTestServer(t, Config{})
-	resp, body := get(t, srv.URL+"/demo/")
-	if resp.StatusCode != 200 {
-		t.Fatalf("status = %d", resp.StatusCode)
-	}
-	if ct := resp.Header.Get("Content-Type"); !strings.HasPrefix(ct, "text/html") {
-		t.Fatalf("content-type = %q", ct)
-	}
-	if !strings.Contains(string(body), "Memory-Bound KV Demo") {
-		t.Fatalf("demo page missing title, got %d bytes", len(body))
-	}
-	noRedirect := &http.Client{CheckRedirect: func(*http.Request, []*http.Request) error {
-		return http.ErrUseLastResponse
-	}}
-	resp2, err := noRedirect.Get(srv.URL + "/demo")
-	if err != nil {
-		t.Fatal(err)
-	}
-	resp2.Body.Close()
-	if resp2.StatusCode != http.StatusMovedPermanently {
-		t.Fatalf("/demo status = %d; want 301", resp2.StatusCode)
-	}
-}
-
 func TestPutGetMissing(t *testing.T) {
 	srv, _, _ := newTestServer(t, Config{})
 	resp, _ := get(t, srv.URL+"/kv/missing")

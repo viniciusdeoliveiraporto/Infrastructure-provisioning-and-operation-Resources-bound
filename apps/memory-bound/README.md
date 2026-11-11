@@ -147,8 +147,8 @@ convention: an nginx site, a systemd unit, and two start scripts.
    ```
 
    Or open the manual demo page (store/retrieve a key from the browser):
-   **http://127.0.0.1:8080/demo/** — served by the Go server itself (the page
-   is embedded in the binary), proxied through nginx.
+   **http://127.0.0.1:8080/demo/** — served by nginx from
+   `apps/memory-bound/demo/index.html`.
 
 Caveats: the demo/admin path adds nginx + NAT overhead, so run the real
 benchmarks inside the VM with loadgen pointed at `127.0.0.1:8080` directly
@@ -165,7 +165,6 @@ private/NAT-only network.
 | `PUT /kv/{key}` | Insert/replace with a raw byte body; `204` on success, `413` if the body exceeds `-max-body-bytes` |
 | `GET /random` | A uniformly random existing value; `404` on an empty store |
 | `GET /batch?n=N` | N distinct random values, `1 ≤ N ≤ max-batch`. Response: concatenated frames of `[4-byte big-endian length][value bytes]`. Fewer frames are returned when the store has fewer than N entries; `400` for invalid N |
-| `GET /demo/` | Embedded HTML demo page (browser store/retrieve); `/demo` redirects here |
 | `POST /admin/populate` | `{"entries":100000,"value_size":1024}` — replaces the whole dataset with deterministic keys `key-000000000…`. Returns entry count, value size, logical bytes, duration. A second concurrent populate is rejected with `409` |
 | `GET /admin/metrics?since=<unixnano>&until=<unixnano>` | Buffered resource samples (see below) |
 
