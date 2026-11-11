@@ -4,7 +4,7 @@ import aiofiles
 from fastapi import UploadFile,HTTPException
 
 
-STORAGE_DIR = Path(__file__).resolve().parent.parent / "storage"
+STORAGE_DIR = Path("/data/io-bound/storage")
 CHUNK_SIZE = 1024 * 1024
 
 async def save_file(file: UploadFile) -> dict:
