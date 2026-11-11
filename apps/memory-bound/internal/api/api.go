@@ -8,6 +8,7 @@
 //	PUT  /kv/{key}          raw byte insert/replace
 //	GET  /random            random existing value
 //	GET  /batch?n=N         N distinct random values, length-prefixed frames
+//	GET  /demo/             embedded manual demo page (browser store/retrieve)
 //	POST /admin/populate    prepopulate dataset (admin only)
 //	GET  /admin/metrics     buffered resource samples (admin only)
 //
@@ -24,6 +25,7 @@ import (
 	"strconv"
 	"time"
 
+	"memory-bound/demo"
 	"memory-bound/internal/monitor"
 	"memory-bound/internal/store"
 )
@@ -74,11 +76,20 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("PUT /kv/{key}", s.handlePutKV)
 	mux.HandleFunc("GET /random", s.handleRandom)
 	mux.HandleFunc("GET /batch", s.handleBatch)
+	mux.HandleFunc("GET /demo", func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, "/demo/", http.StatusMovedPermanently)
+	})
+	mux.HandleFunc("GET /demo/{$}", s.handleDemo)
 	if s.cfg.Admin {
 		mux.HandleFunc("POST /admin/populate", s.handlePopulate)
 		mux.HandleFunc("GET /admin/metrics", s.handleMetrics)
 	}
 	return mux
+}
+
+func (s *Server) handleDemo(w http.ResponseWriter, _ *http.Request) {
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	_, _ = w.Write(demo.IndexHTML)
 }
 
 func (s *Server) writeJSON(w http.ResponseWriter, status int, v any) {
