@@ -1,0 +1,9 @@
+# Keep the build context to the Go sources only.
+server
+.venv/
+.pytest_cache/
+__pycache__/
+*.md
+Dockerfile
+.dockerignore
+.gitignore
